@@ -3,6 +3,7 @@ package com.ruhul.facedetectgooglemlvision
 import android.Manifest
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -32,23 +33,32 @@ class MainActivity : AppCompatActivity() {
 
         initAlertDialog()
         binding.fileUpload.setOnClickListener {
-            Dexter.withContext(this@MainActivity)
-                .withPermissions(
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-                ).withListener(object : MultiplePermissionsListener {
-                    override fun onPermissionsChecked(report: MultiplePermissionsReport) {
-                        if (report.areAllPermissionsGranted()) {
-                            pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo))
-                        }
-                    }
 
-                    override fun onPermissionRationaleShouldBeShown(
-                        p0: MutableList<com.karumi.dexter.listener.PermissionRequest>?,
-                        token: PermissionToken?
-                    ) {
-                        token?.continuePermissionRequest()
-                    }
-                }).check()
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo))
+            } else {
+                Dexter.withContext(this@MainActivity)
+                    .withPermissions(
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    ).withListener(object : MultiplePermissionsListener {
+                        override fun onPermissionsChecked(report: MultiplePermissionsReport) {
+                            if (report.areAllPermissionsGranted()) {
+                                pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo))
+                            }
+                        }
+
+                        override fun onPermissionRationaleShouldBeShown(
+                            p0: MutableList<com.karumi.dexter.listener.PermissionRequest>?,
+                            token: PermissionToken?
+                        ) {
+                            token?.continuePermissionRequest()
+                        }
+                    }).check()
+        }
+
+
+
         }
     }
 
