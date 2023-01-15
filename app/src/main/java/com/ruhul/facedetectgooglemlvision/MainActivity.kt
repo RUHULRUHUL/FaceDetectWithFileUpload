@@ -2,8 +2,8 @@ package com.ruhul.facedetectgooglemlvision
 
 import android.Manifest
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
@@ -24,14 +24,13 @@ class MainActivity : AppCompatActivity() {
     private val logTag: String = "MainActivity-Debug:"
     private lateinit var binding: ActivityMainBinding
     private lateinit var alertDialog: SpotsDialog
-    private var bitmap: Bitmap? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        initAlertDialog()
 
+        initAlertDialog()
         binding.fileUpload.setOnClickListener {
             Dexter.withContext(this@MainActivity)
                 .withPermissions(
@@ -42,6 +41,7 @@ class MainActivity : AppCompatActivity() {
                             pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo))
                         }
                     }
+
                     override fun onPermissionRationaleShouldBeShown(
                         p0: MutableList<com.karumi.dexter.listener.PermissionRequest>?,
                         token: PermissionToken?
@@ -64,12 +64,13 @@ class MainActivity : AppCompatActivity() {
             if (uri != null) {
                 Log.d("PhotoPicker", "Selected URI: $uri")
                 try {
-                    bitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri)
+                    val bitmap = BitmapFactory.decodeStream(contentResolver.openInputStream(uri))
                     binding.imageView.setImageBitmap(bitmap)
                     processFaceImg(bitmap)
                 } catch (e: IOException) {
                     e.printStackTrace()
                 }
+
             } else {
                 Log.d("PhotoPicker", "No media selected")
             }
