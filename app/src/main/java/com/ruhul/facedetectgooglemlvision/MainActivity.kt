@@ -1,12 +1,13 @@
 package com.ruhul.facedetectgooglemlvision
 
 import android.Manifest
-import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
 import com.google.mlkit.vision.common.InputImage
@@ -21,22 +22,16 @@ import java.io.IOException
 
 class MainActivity : AppCompatActivity() {
     private val logTag: String = "MainActivity-Debug:"
-
     private lateinit var binding: ActivityMainBinding
     private lateinit var alertDialog: SpotsDialog
     private var bitmap: Bitmap? = null
-
-
-    companion object {
-        private const val PICK_IMAGE = 10
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         initAlertDialog()
+
         binding.fileUpload.setOnClickListener {
             Dexter.withContext(this@MainActivity)
                 .withPermissions(
@@ -44,10 +39,9 @@ class MainActivity : AppCompatActivity() {
                 ).withListener(object : MultiplePermissionsListener {
                     override fun onPermissionsChecked(report: MultiplePermissionsReport) {
                         if (report.areAllPermissionsGranted()) {
-                            choseFromGallery()
+                            pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo))
                         }
                     }
-
                     override fun onPermissionRationaleShouldBeShown(
                         p0: MutableList<com.karumi.dexter.listener.PermissionRequest>?,
                         token: PermissionToken?
@@ -56,7 +50,6 @@ class MainActivity : AppCompatActivity() {
                     }
                 }).check()
         }
-        binding.backButton.setOnClickListener { onBackPressed() }
     }
 
     private fun initAlertDialog() {
@@ -66,34 +59,24 @@ class MainActivity : AppCompatActivity() {
             .build() as SpotsDialog?)!!
     }
 
-
-    private fun choseFromGallery() {
-        val intent = Intent()
-        intent.type = "image/*"
-        intent.action = Intent.ACTION_GET_CONTENT
-        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE)
-    }
-
-
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == PICK_IMAGE && resultCode == RESULT_OK) {
-            if (data != null) {
-                val imageUri = data.data
+    private val pickMedia =
+        registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            if (uri != null) {
+                Log.d("PhotoPicker", "Selected URI: $uri")
                 try {
-                    bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUri)
+                    bitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri)
                     binding.imageView.setImageBitmap(bitmap)
                     processFaceImg(bitmap)
                 } catch (e: IOException) {
                     e.printStackTrace()
                 }
+            } else {
+                Log.d("PhotoPicker", "No media selected")
             }
         }
-    }
+
 
     private fun processFaceImg(bitmap: Bitmap?) {
-
         alertDialog.show()
         val options = FaceDetectorOptions.Builder()
             .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
@@ -127,10 +110,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getFaceResult(it: List<Face>) {
-
         val face = it[0]
-
-        // If landmark detection was enabled (mouth, ears, eyes, cheeks, and nose)
         val rightEar = face.getLandmark(FaceLandmark.RIGHT_EAR)
         val leftEar = face.getLandmark(FaceLandmark.LEFT_EAR)
         val nose = face.getLandmark(FaceLandmark.NOSE_BASE)
@@ -155,10 +135,6 @@ class MainActivity : AppCompatActivity() {
                     )
                 snackBar.show()
             }
-
         }
-
     }
-
-
 }
