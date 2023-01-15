@@ -3,7 +3,6 @@ package com.ruhul.facedetectgooglemlvision
 import android.Manifest
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.PointF
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
@@ -96,8 +95,6 @@ class MainActivity : AppCompatActivity() {
     private fun processFaceImg(bitmap: Bitmap?) {
 
         alertDialog.show()
-
-        // High-accuracy landmark detection and face classification
         val options = FaceDetectorOptions.Builder()
             .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
             .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
@@ -143,8 +140,6 @@ class MainActivity : AppCompatActivity() {
 
         if (rightEar != null && leftEar != null && nose != null && mouthLeft != null && mouthRight != null && mouthBottom != null) {
             Log.d(logTag, "LandMark Check success ")
-
-            // If contour detection was enabled:
             val leftEyeContour = face.getContour(FaceContour.LEFT_EYE)?.points
             val upperLipBottomContour = face.getContour(FaceContour.UPPER_LIP_BOTTOM)?.points
             val lowerLitBottomContour = face.getContour(FaceContour.LOWER_LIP_BOTTOM)?.points
